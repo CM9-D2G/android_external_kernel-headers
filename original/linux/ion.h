@@ -186,9 +186,14 @@ void ion_unmap_dma(struct ion_client *client, struct ion_handle *handle);
  * @client:	the client
  * @handle:	the handle to share
  *
- * Given a handle, return a buffer which exists in a global name
- * space and can be passed to other clients.  Should be passed into ion_import
+ * Given a handle, return a buffer, which exists in a global name
+ * space, and can be passed to other clients.  Should be passed into ion_import
  * to obtain a new handle for this buffer.
+ *
+ * NOTE: This function does do not an extra reference.  The burden is on the
+ * caller to make sure the buffer doesn't go away while it's being passed to
+ * another client.  That is, ion_free should not be called on this handle until
+ * the buffer has been imported into the other client.
  */
 struct ion_buffer *ion_share(struct ion_client *client,
 			     struct ion_handle *handle);
@@ -281,22 +286,9 @@ struct ion_custom_data {
 	unsigned int cmd;
 	unsigned long arg;
 };
-
-/**
- * struct ion_cached_user_buf_data - metadata passed from userspace for
- * flushing or invalidating the ion handle which was mapped cacheable.
- * @handle:	a handle
- * @vaddr: virtual address corresponding to the handle after mapping
- * @size: size of the buffer which should be flushed or invalidated
- *
- * For ION_IOC_FLUSH_CACHED & ION_IOC_INVAL_CACHED, userspace populates
- * the handle field with the ion handle and vaddr with the virtual address
- * corresponding to the handle along with size to be flushed/invalidated.
- */
-struct ion_cached_user_buf_data {
-	struct ion_handle *handle;
-	unsigned long vaddr;
-	size_t size;
+struct ion_map_gralloc_to_ionhandle_data {
+	void *gralloc_handle;
+	struct ion_handle *handleY;
 };
 
 #define ION_IOC_MAGIC		'I'
@@ -360,4 +352,6 @@ struct ion_cached_user_buf_data {
 #define ION_IOC_INVAL_CACHED	_IOWR(ION_IOC_MAGIC, 8, \
 					struct ion_cached_user_buf_data)
 
+#define ION_IOC_MAP_GRALLOC	_IOWR(ION_IOC_MAGIC, 9, \
+				struct ion_map_gralloc_to_ionhandle_data)
 #endif /* _LINUX_ION_H */
