@@ -186,6 +186,22 @@ enum s3d_disp_view {
 	S3D_DISP_VIEW_R,
 };
 
+/*
+ * How is the S3D content laid out
+ */
+enum s3d_layout_type {
+	MONO 				= 0x0,
+	S3D_SIDE_BY_SIDE	= 0x1,
+	S3D_TOP_BOTTOM		= 0x2,
+	S3D_ROW_INTERLEAVED	= 0x3,
+	S3D_COL_INTERLEAVED	= 0x4,
+};
+
+enum s3d_layout_order {
+	LEFT_VIEW_FIRST	= 0x0,
+	RIGHT_VIEW_FIRST = 0x1,
+};
+
 struct s3d_disp_info {
 	enum s3d_disp_type type;
 	enum s3d_disp_sub_sampling sub_samp;
@@ -357,6 +373,9 @@ struct dss2_ovl_cfg {
 	__u8 enabled;	/* bool */
 	__u8 zonly;	/* only set zorder and enabled bit */
 	__u8 mgr_ix;	/* mgr index */
+	__u8 s3d_content;
+	enum s3d_layout_type s3d_input_layout_type;
+	enum s3d_layout_order s3d_input_layout_order;
 } __attribute__ ((aligned(4)));
 
 enum omapdss_buffer_type {
@@ -542,6 +561,17 @@ struct dsscomp_check_ovl_data {
 	struct dss2_ovl_info ovl;
 };
 
+//Is this a normal composition or writeback? If writeback, is it a capture mode
+//or a mem2mem mode. In mem2mem mode, do we skip rows or columns?
+enum dsscomp_composition_mode {
+	DSSCOMP_NORMAL_COMPOSITION  = 100,
+	DSSCOMP_WB_M2M_ROW_INTERLEAVED = 101,
+	DSSCOMP_WB_M2M_COL_INTERLEAVED = 102,
+	DSSCOMP_WB_CAPTURE_MODE     = 103,
+};
+
+
+
 /*
  * This structure is used to set up the entire DISPC (all managers),
  * and is analogous to dsscomp_setup_mgr_data.
@@ -566,6 +596,7 @@ struct dsscomp_setup_dispc_data {
 
 	struct dss2_mgr_info mgrs[3];
 	struct dss2_ovl_info ovls[5]; /* up to 5 overlays to set up */
+	enum dsscomp_composition_mode composition_mode;
 };
 
 /*
